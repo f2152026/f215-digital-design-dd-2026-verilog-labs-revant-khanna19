@@ -10,16 +10,41 @@
 //   ...
 //   cla4 block15(.a(a[63:60]),  .b(b[63:60]),  .cin(c[15]),.sum(sum[63:60]),  .cout(cout));
 
-module cla64_blocked(
-  input  [63:0] a,
-  input  [63:0] b,
-  input         cin,
-  output [63:0] sum,
-  output        cout
+module cla64_blocked (
+    input  [63:0] a,
+    input  [63:0] b,
+    input         cin,
+    output [63:0] sum,
+    output        cout
 );
+    wire [15:1] c;   // carries BETWEEN blocks: c[1]..c[15]
 
-  wire [15:1] c;   // carries BETWEEN blocks: c[1]..c[15]
+    cla4 blk0 (
+        .a(a[3:0]),
+        .b(b[3:0]),
+        .cin(cin),
+        .sum(sum[3:0]),
+        .cout(c[1])
+    );
 
-  // TODO: your sixteen cla4 instances go here.
+    genvar i;
+    generate
+        for (i = 1; i < 15; i = i + 1) begin : gen_cla
+            cla4 blk (
+                .a(a[4*i + 3 : 4*i]),
+                .b(b[4*i + 3 : 4*i]),
+                .cin(c[i]),
+                .sum(sum[4*i + 3 : 4*i]),
+                .cout(c[i+1])
+            );
+        end
+    endgenerate
 
+    cla4 blk15 (
+        .a(a[63:60]),
+        .b(b[63:60]),
+        .cin(c[15]),
+        .sum(sum[63:60]),
+        .cout(cout)
+    );
 endmodule
